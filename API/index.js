@@ -15,7 +15,7 @@ const path = require('path');
 const app = express();
 const secret = process.env.JWT_SECRET || 'defaultsecret'; // Use the secret from .env or a default value
 
-// const secret = 'qwertyuip';
+
 
 // Middleware
 app.use(

@@ -1,32 +1,4 @@
-// import React, { createContext, useState, useEffect } from 'react';
 
-// export const UserContext = createContext({});
-
-// export function UserContextProvider({ children }) {
-//     const [userInfo, setUserInfo] = useState({});
-
-//     useEffect(() => {
-//         fetch('http://localhost:3000/profile', {
-//             credentials: 'include', // Include cookies for authentication
-//         })
-//             .then((res) => res.json())
-//             .then((data) => {
-//                 if (data.userId) {
-//                     setUserInfo({ id: data.userId, username: data.username });
-//                 }
-//             })
-//             .catch((err) => {
-//                 console.error('Error fetching profile:', err);
-//             });
-//     }, []);
-
-//     return (
-//         <UserContext.Provider value={{ userInfo, setUserInfo }}>
-//             {children}
-            
-//         </UserContext.Provider>
-//     );
-// }
 import React, { createContext, useState, useEffect } from 'react';
 
 export const UserContext = createContext({});
