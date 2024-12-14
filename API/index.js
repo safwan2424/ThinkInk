@@ -27,9 +27,10 @@ cloudinary.config({
 app.use(
     cors({
         credentials: true,
-        origin: 'https://think-ink.vercel.app/', // Adjust to your front-end origin
+        origin: 'https://think-ink.vercel.app', // Removed trailing slash
     })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
