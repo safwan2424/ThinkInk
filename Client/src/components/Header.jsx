@@ -68,18 +68,33 @@ function Header() {
     const { setUserInfo, userInfo } = useContext(UserContext);
     const navigate = useNavigate(); // Use useNavigate hook for navigation
 
+    // useEffect(() => {
+    //     fetch('https://think-ink-backend.vercel.app/profile', {
+    //         credentials: 'include',
+    //     })
+    //         .then(response => {
+    //             if (response.ok) {
+    //                 return response.json();
+    //             }
+    //             throw new Error('Failed to fetch user info');
+    //         })
+    //         .then(userInfo => {
+    //             setUserInfo(userInfo); // Correctly setting user info in context
+    //         })
+    //         .catch(error => console.error('Error fetching profile:', error));
+    // }, [setUserInfo]);
     useEffect(() => {
         fetch('https://think-ink-backend.vercel.app/profile', {
             credentials: 'include',
         })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
+            .then(response => response.json())
+            .then(data => {
+                if (data.loggedIn) {
+                    setUserInfo({ id: data.userId, username: data.username });
+                } else {
+                    console.log(data.message || 'User not logged in.');
+                    setUserInfo(null); // Clear user info if no user is logged in
                 }
-                throw new Error('Failed to fetch user info');
-            })
-            .then(userInfo => {
-                setUserInfo(userInfo); // Correctly setting user info in context
             })
             .catch(error => console.error('Error fetching profile:', error));
     }, [setUserInfo]);
