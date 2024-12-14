@@ -27,7 +27,7 @@ cloudinary.config({
 app.use(
     cors({
         credentials: true,
-        origin: 'http://localhost:5173', // Adjust to your front-end origin
+        origin: 'https://think-ink.vercel.app/', // Adjust to your front-end origin
     })
 );
 app.use(express.json());
