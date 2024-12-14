@@ -49,7 +49,7 @@ function Create() {
       data.set('file', files[0]); // Change 'files' to 'file'
     }
 
-    const response = await fetch('http://localhost:3000/post', {
+    const response = await fetch('https://think-ink-backend.vercel.app/post', {   //  http://localhost:3000
       method: 'POST',
       body: data,
       credentials: 'include',

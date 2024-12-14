@@ -14,8 +14,8 @@ function PostPages() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        fetch(`http://localhost:3000/post/${id}`)
-            .then((response) => response.json())
+        fetch(`https://think-ink-backend.vercel.app/post/${id}`)   // http://localhost:3000
+            .then((response) => response.json()) 
             .then((data) => {
                 setPostInfo(data);
                 setIsLoading(false);
@@ -32,7 +32,7 @@ function PostPages() {
         if (!confirmed) return;
 
         try {
-            const response = await fetch(`http://localhost:3000/post/${id}`, {
+            const response = await fetch(`https://think-ink-backend.vercel.app/post/${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });

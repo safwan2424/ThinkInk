@@ -11,7 +11,7 @@ export function UserContextProvider({ children }) {
     useEffect(() => {
         const fetchUserProfile = async () => {
             try {
-                const res = await fetch('http://localhost:3000/profile', {
+                const res = await fetch('https://think-ink-backend.vercel.app/profile', {   //https://think-ink-backend.vercel.app  http://localhost:3000
                     credentials: 'include', // Include cookies for authentication
                 });
                 const data = await res.json();

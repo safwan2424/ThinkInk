@@ -38,7 +38,7 @@ function EditPost() {
   const quillRef = useRef(null);
 
   useEffect(() => {
-    fetch('http://localhost:3000/post/' + id)
+    fetch('https://think-ink-backend.vercel.app/post/' + id)  // http://localhost:3000
       .then((response) => response.json())
       .then((postInfo) => {
         setTitle(postInfo.title);
@@ -64,7 +64,7 @@ function EditPost() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/post/' + id, {
+      const response = await fetch('https://think-ink-backend.vercel.app/post/' + id, {
         method: 'PUT',
         body: data,
         credentials: 'include',

@@ -7,7 +7,7 @@ function HomePage() {
   const [loading, setLoading] = useState(true); // State to indicate loading
 
   useEffect(() => {
-    fetch('http://localhost:3000/post')
+    fetch(' https://think-ink-backend.vercel.app/post')    //http://localhost:3000
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to fetch posts');

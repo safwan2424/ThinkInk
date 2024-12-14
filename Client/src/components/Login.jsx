@@ -14,7 +14,7 @@ function Login() {
     async function logs(ev) {
         ev.preventDefault();
         try {
-            const response = await fetch('http://localhost:3000/login', {
+            const response = await fetch('https://think-ink-backend.vercel.app/login', {   //  http://localhost:3000
                 method: 'POST',
                 body: JSON.stringify({ username, password }),
                 headers: { 'Content-Type': 'application/json' },
