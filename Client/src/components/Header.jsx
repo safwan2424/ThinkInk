@@ -67,22 +67,6 @@ import logo from "../assets/logo.png";
 function Header() {
     const { setUserInfo, userInfo } = useContext(UserContext);
     const navigate = useNavigate(); // Use useNavigate hook for navigation
-
-    // useEffect(() => {
-    //     fetch('https://think-ink-backend.vercel.app/profile', {
-    //         credentials: 'include',
-    //     })
-    //         .then(response => {
-    //             if (response.ok) {
-    //                 return response.json();
-    //             }
-    //             throw new Error('Failed to fetch user info');
-    //         })
-    //         .then(userInfo => {
-    //             setUserInfo(userInfo); // Correctly setting user info in context
-    //         })
-    //         .catch(error => console.error('Error fetching profile:', error));
-    // }, [setUserInfo]);
     useEffect(() => {
         fetch('https://think-ink-backend.vercel.app/profile', {
             credentials: 'include',
@@ -112,25 +96,26 @@ function Header() {
 
     return (
         <header className="bg-gray-800 text-white py-4 px-6 shadow-md flex justify-between items-center">
-            <Link to="/" className="flex items-center text-2xl font-semibold hover:text-gray-300 transition-all">
-                <img src={logo} alt="ThinkInk Logo" className="h-10 mr-3" />
-                ThinkInk
-            </Link>
-            <nav className="flex space-x-6">
-                {username ? (
-                    <>
-                        <span className="text-lg">Hello, <span className="font-bold">{username}</span></span>
-                        <Link to="/create" className="text-lg hover:text-gray-300 transition-colors">Create New Post</Link>
-                        <a onClick={logout} className="text-lg cursor-pointer hover:text-gray-300 transition-colors">Logout</a>
-                    </>
-                ) : (
-                    <>
-                        <Link to="/login" className="text-lg hover:text-gray-300 transition-colors">Login</Link>
-                        <Link to="/register" className="text-lg hover:text-gray-300 transition-colors">Register</Link>
-                    </>
-                )}
-            </nav>
-        </header>
+    <Link to="/" className="flex items-center text-2xl font-semibold hover:text-gray-300 transition-all">
+        <img src={logo} alt="ThinkInk Logo" className="h-10 mr-3" />
+        ThinkInk
+    </Link>
+    <nav className="flex space-x-6 flex-wrap sm:flex-nowrap justify-center w-full sm:w-auto">
+        {username ? (
+            <>
+                <span className="text-lg w-full sm:w-auto text-center sm:text-left">Hello, <span className="font-bold">{username}</span></span>
+                <Link to="/create" className="text-lg hover:text-gray-300 transition-colors w-full sm:w-auto text-center sm:text-left">Create New Post</Link>
+                <a onClick={logout} className="text-lg cursor-pointer hover:text-gray-300 transition-colors w-full sm:w-auto text-center sm:text-left">Logout</a>
+            </>
+        ) : (
+            <>
+                <Link to="/login" className="text-lg hover:text-gray-300 transition-colors w-full sm:w-auto text-center sm:text-left">Login</Link>
+                <Link to="/register" className="text-lg hover:text-gray-300 transition-colors w-full sm:w-auto text-center sm:text-left">Register</Link>
+            </>
+        )}
+    </nav>
+</header>
+
     );
 }
 

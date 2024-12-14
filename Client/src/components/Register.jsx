@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import PersonIcon from '@mui/icons-material/Person';
 import PasswordIcon from '@mui/icons-material/Password';
+import { Navigate } from 'react-router-dom';
 
 function Register() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [alertMessage, setAlertMessage] = useState(null);
+    const [alertMessage, setAlertMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [redirect, setRedirect] = useState(false);
 
     async function registering(e) {
         e.preventDefault();
@@ -20,7 +22,7 @@ function Register() {
         setLoading(true);
 
         try {
-            const response = await fetch('https://think-ink-backend.vercel.app/register', {  //  http://localhost:3000
+            const response = await fetch('https://think-ink-backend.vercel.app/register', {
                 method: 'POST',
                 body: JSON.stringify({ username, password }),
                 headers: { 'Content-Type': 'application/json' },
@@ -32,6 +34,11 @@ function Register() {
                 setAlertMessage('Registration successful!');
                 setUsername('');
                 setPassword('');
+
+                // Redirect after 3 seconds
+                setTimeout(() => {
+                    setRedirect(true); // Trigger redirect
+                }, 3000);
             } else {
                 const errorData = await response.json();
                 setAlertMessage(errorData.error || 'Registration failed. Please try again.');
@@ -44,6 +51,9 @@ function Register() {
         }
     }
 
+    if (redirect) {
+        return <Navigate to="/login" />;  // Redirect to login page
+    }
     return (
         <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 via-indigo-100 to-gray-400">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full backdrop-blur-lg bg-opacity-40">
