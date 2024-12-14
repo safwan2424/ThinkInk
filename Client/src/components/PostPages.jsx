@@ -68,7 +68,7 @@ function PostPages() {
 
             <div className="my-4">
                 <img
-                    src={`http://localhost:3000/${postInfo.cover}`}
+                    src={postInfo.cover}
                     alt="Post cover"
                     className="w-full h-auto rounded-lg shadow-md"
                 />

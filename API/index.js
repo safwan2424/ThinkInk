@@ -10,31 +10,35 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const uploadMiddleware = multer({ dest: 'uploads/' });
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 const path = require('path');
 
 const app = express();
-const secret = process.env.JWT_SECRET || 'defaultsecret'; // Use the secret from .env or a default value
+const secret = process.env.JWT_SECRET || 'defaultsecret';
 
-
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Middleware
 app.use(
     cors({
         credentials: true,
-        origin: 'http://localhost:5173', // Allow your front-end origin
+        origin: 'http://localhost:5173', // Adjust to your front-end origin
     })
 );
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'));
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI;
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('Error connecting to MongoDB:', err));
-
 
 // Register Endpoint
 app.post('/register', async (req, res) => {
@@ -45,7 +49,6 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Username and password are required' });
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ error: 'Username already exists' });
@@ -114,46 +117,43 @@ app.post('/logout', (req, res) => {
     res.cookie('token', '', { maxAge: 0, httpOnly: true }).json({ message: 'Logged out successfully' });
 });
 
-// Post Creation Endpoint
-// Post Creation Endpoint
+// Post Creation Endpoint with Cloudinary Upload
 app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
     try {
-        const { originalname, path: tempPath } = req.file;
-        const extension = path.extname(originalname);
-        const newPath = tempPath + extension;
-
-        fs.renameSync(tempPath, newPath);
         const { token } = req.cookies;
         if (!token) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        // Verify the token
         jwt.verify(token, secret, async (err, info) => {
             if (err) {
                 return res.status(401).json({ error: 'Invalid token' });
             }
 
             const { title, summary, content } = req.body;
-
-            // Validate request body
             if (!title || !summary || !content) {
                 return res.status(400).json({ error: 'Missing required fields' });
             }
 
-            // Create the post
+            const filePath = req.file.path;
+            const cloudinaryResponse = await cloudinary.uploader.upload(filePath, {
+                folder: 'posts/',
+                resource_type: 'auto',
+            });
+
+            fs.unlinkSync(filePath);
+
             const postDoc = await PostModel.create({
                 title,
                 summary,
                 content,
-                cover: newPath,
-                author: info.userId, // Use info.userId instead of info.id
+                cover: cloudinaryResponse.secure_url,
+                author: info.userId,
             });
 
-            // Populate the author field with the user's details
-            const populatedPost = await postDoc.populate('author', 'username'); // Populating author with username
+            const populatedPost = await postDoc.populate('author', 'username');
 
-            res.status(201).json(populatedPost); // Return the post with author details
+            res.status(201).json(populatedPost);
         });
     } catch (err) {
         console.error('Error creating post:', err);
@@ -161,39 +161,52 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
     }
 });
 
+// PUT - Update Post with Cloudinary Integration
 app.put('/post/:id', uploadMiddleware.single('file'), async (req, res) => {
     const { id } = req.params;
     const { token } = req.cookies;
-    
-    // Verify the token and get user info
+
     jwt.verify(token, secret, {}, async (err, info) => {
         if (err) return res.status(401).json({ error: 'Unauthorized' });
 
-        // Find the post by ID
         const postDoc = await PostModel.findById(id);
         if (!postDoc) return res.status(404).json({ error: 'Post not found' });
 
-        // Ensure the user is the author of the post
-        const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.userId);
-        if (!isAuthor) return res.status(403).json({ error: 'Forbidden' });
+        if (JSON.stringify(postDoc.author) !== JSON.stringify(info.userId)) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
 
         const { title, summary, content } = req.body;
-        // Handle file upload path if file exists
-        const newPath = req.file ? req.file.path + path.extname(req.file.originalname) : postDoc.cover;
+        let newCoverUrl = postDoc.cover;
 
-        // Update fields directly
+        if (req.file) {
+            const filePath = req.file.path;
+            const cloudinaryResponse = await cloudinary.uploader.upload(filePath, {
+                folder: 'posts/',
+                resource_type: 'auto',
+            });
+
+            if (postDoc.cover) {
+                const publicId = postDoc.cover.split('/').pop().split('.')[0];
+                await cloudinary.uploader.destroy(`posts/${publicId}`);
+            }
+
+            newCoverUrl = cloudinaryResponse.secure_url;
+            fs.unlinkSync(filePath);
+        }
+
         postDoc.title = title;
         postDoc.summary = summary;
         postDoc.content = content;
-        postDoc.cover = newPath;  // Update cover image if a new file is uploaded
+        postDoc.cover = newCoverUrl;
 
-        // Save the updated document
         await postDoc.save();
 
-        // Return the updated post
         res.status(200).json(postDoc);
     });
 });
+
+// DELETE - Delete Post with Cloudinary Integration
 app.delete('/post/:id', async (req, res) => {
     const { id } = req.params;
     const { token } = req.cookies;
@@ -201,26 +214,29 @@ app.delete('/post/:id', async (req, res) => {
     jwt.verify(token, secret, {}, async (err, info) => {
         if (err) return res.status(401).json({ error: 'Unauthorized' });
 
-        // Find the post by ID
         const postDoc = await PostModel.findById(id);
         if (!postDoc) return res.status(404).json({ error: 'Post not found' });
 
-        // Ensure the user is the author of the post
-        const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.userId);
-        if (!isAuthor) return res.status(403).json({ error: 'Forbidden' });
+        if (JSON.stringify(postDoc.author) !== JSON.stringify(info.userId)) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
 
-        // Delete the post
+        if (postDoc.cover) {
+            const publicId = postDoc.cover.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(`posts/${publicId}`);
+        }
+
         await PostModel.findByIdAndDelete(id);
 
         res.status(200).json({ success: true, message: 'Post deleted successfully' });
     });
 });
 
-
+// Fetch All Posts
 app.get('/post', async (req, res) => {
     try {
         const posts = await PostModel.find()
-            .populate('author', 'username') // Populating only the 'username' field of 'author'
+            .populate('author', 'username')
             .sort({ createdAt: -1 })
             .limit(20);
 
@@ -230,23 +246,21 @@ app.get('/post', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch posts' });
     }
 });
+
+// Fetch Post by ID
 app.get('/post/:id', async (req, res) => {
     try {
-      const { id } = req.params;
-      const postDoc = await PostModel.findById(id).populate('author', 'username');
-      if (!postDoc) {
-        return res.status(404).json({ error: 'Post not found' });
-      }
-      res.json(postDoc); // Correctly send the post document as a JSON response
-    } catch (error) {
-      console.error('Error fetching post by ID:', error);
-      res.status(500).json({ error: 'Failed to fetch post' });
+        const { id } = req.params;
+        const postDoc = await PostModel.findById(id).populate('author', 'username');
+        if (!postDoc) return res.status(404).json({ error: 'Post not found' });
+        res.json(postDoc);
+    } catch (err) {
+        console.error('Error fetching post by ID:', err);
+        res.status(500).json({ error: 'Failed to fetch post' });
     }
-  });
+});
 
-
-// Start the server
+// Start the Server
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
-

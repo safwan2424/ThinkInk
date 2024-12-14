@@ -19,7 +19,8 @@ function Post({ _id, title, summary, cover, content, createdAt, author }) {
       <div className="relative">
         <Link to={`/post/${_id}`}>
           <img
-            src={'http://localhost:3000/' + cover}
+            // src={'http://localhost:3000/' + cover}
+            src={cover} 
             alt="Post cover"
             className="w-full h-64 object-cover transition-transform duration-300 transform hover:scale-105"
           />
